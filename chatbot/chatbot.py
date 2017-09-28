@@ -109,7 +109,8 @@ class Chatbot:
 
         # Dataset options
         datasetArgs = parser.add_argument_group('Dataset options')
-        datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default=TextData.corpusChoices()[0], help='corpus on which extract the dataset.')
+        # datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default=TextData.corpusChoices()[0], help='corpus on which extract the dataset.')
+        datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default='', help='corpus on which extract the dataset.')
         datasetArgs.add_argument('--datasetTag', type=str, default='', help='add a tag to the dataset (file where to load the vocabulary and the precomputed samples, not the original corpus). Useful to manage multiple versions. Also used to define the file used for the lightweight format.')  # The samples are computed from the corpus if it does not exist already. There are saved in \'data/samples/\'
         datasetArgs.add_argument('--ratioDataset', type=float, default=1.0, help='ratio of dataset used to avoid using the whole dataset')  # Not implemented, useless ?
         datasetArgs.add_argument('--maxLength', type=int, default=10, help='maximum length of the sentence (for input and output), define number of maximum step of the RNN')
@@ -540,9 +541,12 @@ class Chatbot:
             self.globStep = config['General'].getint('globStep')
             self.args.watsonMode = config['General'].getboolean('watsonMode')
             self.args.autoEncode = config['General'].getboolean('autoEncode')
-            self.args.corpus = config['General'].get('corpus')
 
-            self.args.datasetTag = config['Dataset'].get('datasetTag')
+            if self.args.corpus=='':
+                self.args.corpus = config['General'].get('corpus')
+            if self.args.datasetTag=='':
+                self.args.datasetTag = config['Dataset'].get('datasetTag')
+
             self.args.maxLength = config['Dataset'].getint('maxLength')  # We need to restore the model length because of the textData associated and the vocabulary size (TODO: Compatibility mode between different maxLength)
             self.args.filterVocab = config['Dataset'].getint('filterVocab')
             self.args.skipLines = config['Dataset'].getboolean('skipLines')

@@ -74,6 +74,8 @@ class TextData:
         self.args = args
 
         # Path variables
+        if self.args.corpus=='':
+            self.args.corpus = TextData.corpusChoices()[0]
         self.corpusDir = os.path.join(self.args.rootDir, 'data', self.args.corpus)
         basePath = self._constructBasePath()
         self.fullSamplesPath = basePath + '.pkl'  # Full sentences length/vocab
@@ -243,11 +245,11 @@ class TextData:
         """Load/create the conversations data
         """
         datasetExist = os.path.isfile(self.filteredSamplesPath)
-        if not datasetExist:  # First time we load the database: creating all files
+        if not datasetExist or self.args.createDataset:  # First time we load the database: creating all files
             print('Training samples not found. Creating dataset...')
 
             datasetExist = os.path.isfile(self.fullSamplesPath)  # Try to construct the dataset from the preprocessed entry
-            if not datasetExist:
+            if not datasetExist or self.args.createDataset:
                 print('Constructing full dataset...')
 
                 optional = ''
@@ -258,6 +260,7 @@ class TextData:
 
                 # Corpus creation
                 corpusData = TextData.availableCorpus[self.args.corpus](self.corpusDir + optional)
+                # print(corpusData.getConversations())         #--------------------------------bing
                 self.createFullCorpus(corpusData.getConversations())
                 self.saveDataset(self.fullSamplesPath)
             else:
@@ -615,13 +618,20 @@ class TextData:
         return sequence  # We return the raw sentence. Let the caller do some cleaning eventually
 
     def playDataset(self):
-        """Print a random dialogue from the dataset
+        # """Print a random dialogue from the dataset
+        # """
+        # print('Randomly play samples:')
+        # for i in range(self.args.playDataset):
+        #     idSample = random.randint(0, len(self.trainingSamples) - 1)
+        #     print('Q: {}'.format(self.sequence2str(self.trainingSamples[idSample][0], clean=True)))
+        #     print('A: {}'.format(self.sequence2str(self.trainingSamples[idSample][1], clean=True)))
+        #     print()
+
+        """print all dialogue from dataset
         """
-        print('Randomly play samples:')
-        for i in range(self.args.playDataset):
-            idSample = random.randint(0, len(self.trainingSamples) - 1)
-            print('Q: {}'.format(self.sequence2str(self.trainingSamples[idSample][0], clean=True)))
-            print('A: {}'.format(self.sequence2str(self.trainingSamples[idSample][1], clean=True)))
+        for q, a in self.trainingSamples:
+            print(': {}'.format(self.sequence2str(q, clean=True)))
+            print('A: {}'.format(self.sequence2str(a, clean=True)))
             print()
         pass
 

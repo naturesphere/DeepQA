@@ -178,7 +178,7 @@ class Model:
             output_projection=outputProjection.getWeights() if outputProjection else None,
             feed_previous=bool(self.args.test)  # When we test (self.args.test), we use previous output as next input (feed_previous)
         )
-
+        # print("buildNetwork: self.textData.getVocabularySize {}".format(self.textData.getVocabularySize()))
         # TODO: When the LSTM hidden size is too big, we should project the LSTM output into a smaller space (4086 => 2046): Should speed up
         # training and reduce memory usage. Other solution, use sampling softmax
 
