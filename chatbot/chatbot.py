@@ -110,13 +110,13 @@ class Chatbot:
         # Dataset options
         datasetArgs = parser.add_argument_group('Dataset options')
         # datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default=TextData.corpusChoices()[0], help='corpus on which extract the dataset.')
-        datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default='', help='corpus on which extract the dataset.')
-        datasetArgs.add_argument('--datasetTag', type=str, default='', help='add a tag to the dataset (file where to load the vocabulary and the precomputed samples, not the original corpus). Useful to manage multiple versions. Also used to define the file used for the lightweight format.')  # The samples are computed from the corpus if it does not exist already. There are saved in \'data/samples/\'
+        datasetArgs.add_argument('--corpus', choices=TextData.corpusChoices(), default='', nargs='+',help='corpus on which extract the dataset.')
+        datasetArgs.add_argument('--datasetTag', type=str, default='', nargs='+', help='add a tag to the dataset (file where to load the vocabulary and the precomputed samples, not the original corpus). Useful to manage multiple versions. Also used to define the file used for the lightweight format.')  # The samples are computed from the corpus if it does not exist already. There are saved in \'data/samples/\'
         datasetArgs.add_argument('--ratioDataset', type=float, default=1.0, help='ratio of dataset used to avoid using the whole dataset')  # Not implemented, useless ?
-        datasetArgs.add_argument('--maxLength', type=int, default=10, help='maximum length of the sentence (for input and output), define number of maximum step of the RNN')
+        datasetArgs.add_argument('--maxLength', type=int, default=30, help='maximum length of the sentence (for input and output), define number of maximum step of the RNN')
         datasetArgs.add_argument('--filterVocab', type=int, default=1, help='remove rarelly used words (by default words used only once). 0 to keep all words.')
         datasetArgs.add_argument('--skipLines', action='store_true', help='Generate training samples by only using even conversation lines as questions (and odd lines as answer). Useful to train the network on a particular person.')
-        datasetArgs.add_argument('--vocabularySize', type=int, default=40000, help='Limit the number of words in the vocabulary (0 for unlimited)')
+        datasetArgs.add_argument('--vocabularySize', type=int, default=10000, help='Limit the number of words in the vocabulary (0 for unlimited)')
 
         # Network options (Warning: if modifying something here, also make the change on save/loadParams() )
         nnArgs = parser.add_argument_group('Network options', 'architecture related option')
@@ -129,7 +129,7 @@ class Chatbot:
 
         # Training options
         trainingArgs = parser.add_argument_group('Training options')
-        trainingArgs.add_argument('--numEpochs', type=int, default=30, help='maximum number of epochs to run')
+        trainingArgs.add_argument('--numEpochs', type=int, default=50, help='maximum number of epochs to run')
         trainingArgs.add_argument('--saveEvery', type=int, default=2000, help='nb of mini-batch step before creating a model checkpoint')
         trainingArgs.add_argument('--batchSize', type=int, default=256, help='mini-batch size')
         trainingArgs.add_argument('--learningRate', type=float, default=0.002, help='Learning rate')
@@ -165,10 +165,9 @@ class Chatbot:
         if self.args.createDataset:
             print('Dataset created! Thanks for using this program')
             return  # No need to go further
-
         # Prepare the model
-        with tf.device(self.getDevice()):
-            self.model = Model(self.args, self.textData)
+        # with tf.device(self.getDevice()):
+        self.model = Model(self.args, self.textData)
 
         # Saver/summaries
         self.writer = tf.summary.FileWriter(self._getSummaryName())
@@ -180,10 +179,11 @@ class Chatbot:
         # Also fix seed for random.shuffle (does it works globally for all files ?)
 
         # Running session
-        self.sess = tf.Session(config=tf.ConfigProto(
+        cfg = tf.ConfigProto(
             allow_soft_placement=True,  # Allows backup device for non GPU-available operations (when forcing GPU)
-            log_device_placement=False)  # Too verbose ?
-        )  # TODO: Replace all sess by self.sess (not necessary a good idea) ?
+			log_device_placement=False)  # Too verbose ?
+        cfg.gpu_options.allow_growth = True
+        self.sess = tf.Session(config = cfg)  # TODO: Replace all sess by self.sess (not necessary a good idea) ?
 
         if self.args.debug:
             self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
@@ -542,10 +542,10 @@ class Chatbot:
             self.args.watsonMode = config['General'].getboolean('watsonMode')
             self.args.autoEncode = config['General'].getboolean('autoEncode')
 
-            if self.args.corpus=='':
-                self.args.corpus = config['General'].get('corpus')
-            if self.args.datasetTag=='':
-                self.args.datasetTag = config['Dataset'].get('datasetTag')
+            # if self.args.corpus=='':
+            self.args.corpus = config['General'].get('corpus')
+            # if self.args.datasetTag=='':
+            self.args.datasetTag = config['Dataset'].get('datasetTag')
 
             self.args.maxLength = config['Dataset'].getint('maxLength')  # We need to restore the model length because of the textData associated and the vocabulary size (TODO: Compatibility mode between different maxLength)
             self.args.filterVocab = config['Dataset'].getint('filterVocab')

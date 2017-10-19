@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
+# http://127.0.0.1:8000/CHATBOT?apikey=b1275afe-39f6-39c4-77b4-e5328dddba7&lang=english&kw=hi 
 
-import tornado.ioloop
+
+
+from tornado.ioloop import IOLoop
 import tornado.web
 from tornado.websocket import websocket_connect
 import logging
@@ -9,6 +12,10 @@ import json
 import time
 import threading
 from chatbot import chatbot 
+import motor.motor_tornado
+import time
+import sys
+import argparse
 
 langs = ["bangla","chinese","french","german","hebrew","hindi","indonesia",
          "italian","marathi","portuguese","russian","spanish","tchinese","telugu","turkish"]
@@ -38,12 +45,33 @@ class WSClient(object):
     def getMsg(self):
         return self.msg
 
+class MongDBConnector():
+    
+    def __init__(self,server_site,server_port,database,colletion):
+        self.server_site = server_site
+        self.server_port = server_port
+        try:
+            self.colletion = MongoClient(server_site,server_port)[database][colletion]
+        except Exception as msg:
+            print(msg)
+            self.colletion = None
+
+    def insert_record(self, ip, question, answer):
+        day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
+        moment = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        record = {  'day':day,
+                    'moment':moment,
+                    'ip':ip,
+                    'question':question,
+                    'answer':answer
+                }
+        self.colletion.insert_one(record)
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):   
         reString = '{ "result": 0, "response": ":-)"}'
 #        global wsc
-        global BOT
+        global BOT, CLTN
         try:
             inputKeys = self.get_argument('kw').strip()
             langKeys = self.get_argument('lang').strip()
@@ -56,26 +84,53 @@ class MainHandler(tornado.web.RequestHandler):
                 response = BOT.daemonPredict(inputKeys)
                 reString = '{ "result": 100, "response": \''+str(response)+'\'}'
                 self.write(reString)
+                try:    # write to mongdb
+                    day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
+                    moment = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                    record = {  'day':day,
+                                'moment':moment,
+                                'ip':self.request.remote_ip,
+                                'question':inputKeys,
+                                'answer':response
+                            }
+                    CLTN.insert_one(record)
+                except Exception as msg:
+                    print(msg)
             else:
                 self.write(reString)
         except Exception as e:
             self.write("Err: %s" % e)
          
 
-def make_app():
+def make_app(db):
     return tornado.web.Application([
         (r"/CHATBOT", MainHandler),
-    ])
+    ],db=db)
 
 if __name__ == "__main__":
-    ioloop = tornado.ioloop.IOLoop.current()
 #    wsc = WSClient()
 #    websocket_connect('ws://192.168.1.109:1234/chat',ioloop,callback=wsc.on_connected,on_message_callback=wsc.on_message)
+    # chat bot
     BOT = chatbot.Chatbot()
     BOT.main(['--modelTag', 'server', '--test', 'daemon', '--rootDir','.'])
-    app = make_app()
-    app.listen(8891)
-    ioloop.start()
+
+    # mongdb client
+    server_site = '127.0.0.1'
+    server_port = 27017
+    database = 'chatbotDB'
+    colletion = time.strftime('day_%Y%m%d',time.localtime(time.time())) 
+    DB = motor.motor_tornado.MotorClient(server_site,server_port)[database]
+    CLTN = DB[colletion]
+
+    #system arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port',type=int,default=8000,help='port')
+    app = make_app(DB)
+    args = parser.parse_args(sys.argv[1:])
+    print(type(args.port))
+    print(args.port)
+    app.listen(args.port)
+    IOLoop.current().start()
     
 
 

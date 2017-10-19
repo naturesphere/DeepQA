@@ -75,8 +75,8 @@ class TextData:
 
         # Path variables
         if self.args.corpus=='':
-            self.args.corpus = TextData.corpusChoices()[0]
-        self.corpusDir = os.path.join(self.args.rootDir, 'data', self.args.corpus)
+            self.args.corpus = [TextData.corpusChoices()[0]]
+        # self.corpusDir = os.path.join(self.args.rootDir, 'data', self.args.corpus)
         basePath = self._constructBasePath()
         self.fullSamplesPath = basePath + '.pkl'  # Full sentences length/vocab
         self.filteredSamplesPath = basePath + '-length{}-filter{}-vocabSize{}.pkl'.format(
@@ -112,8 +112,8 @@ class TextData:
         """
         path = os.path.join(self.args.rootDir, 'data' + os.sep + 'samples' + os.sep)
         path += 'dataset-{}'.format(self.args.corpus)
-        if self.args.datasetTag:
-            path += '-' + self.args.datasetTag
+        if self.args.datasetTag != '':
+            path += '-' + str(self.args.datasetTag)
         return path
 
     def makeLighter(self, ratioDataset):
@@ -245,23 +245,30 @@ class TextData:
         """Load/create the conversations data
         """
         datasetExist = os.path.isfile(self.filteredSamplesPath)
+        
         if not datasetExist or self.args.createDataset:  # First time we load the database: creating all files
             print('Training samples not found. Creating dataset...')
 
             datasetExist = os.path.isfile(self.fullSamplesPath)  # Try to construct the dataset from the preprocessed entry
             if not datasetExist or self.args.createDataset:
                 print('Constructing full dataset...')
-
-                optional = ''
-                if self.args.corpus == 'lightweight':
-                    if not self.args.datasetTag:
-                        raise ValueError('Use the --datasetTag to define the lightweight file to use.')
-                    optional = os.sep + self.args.datasetTag  # HACK: Forward the filename
-
+                print("self.args.corpus = " + str(self.args.corpus))
                 # Corpus creation
-                corpusData = TextData.availableCorpus[self.args.corpus](self.corpusDir + optional)
-                # print(corpusData.getConversations())         #--------------------------------bing
-                self.createFullCorpus(corpusData.getConversations())
+                Conversatons = []
+                for crp in self.args.corpus:
+                    optional = ''
+                    corpusDir = os.path.join(self.args.rootDir, 'data', crp)
+                    if crp != 'lightweight':
+                        corpusData = TextData.availableCorpus[crp](corpusDir)
+                        Conversatons += corpusData.getConversations()
+                    else:
+                        if not self.args.datasetTag:
+                            raise ValueError('Use the --datasetTag to define the lightweight file to use.')
+                        for dt in self.args.datasetTag:
+                            optional = os.sep + dt  # HACK: Forward the filename
+                            corpusData = TextData.availableCorpus[crp](corpusDir + optional)
+                            Conversatons += corpusData.getConversations()
+                self.createFullCorpus(Conversatons)
                 self.saveDataset(self.fullSamplesPath)
             else:
                 self.loadDataset(self.fullSamplesPath)
@@ -274,7 +281,7 @@ class TextData:
             self.filterFromFull()  # Extract the sub vocabulary for the given maxLength and filterVocab
 
             # Saving
-            print('Saving dataset...')
+            print('Saving {} dataset...'.format(self.filteredSamplesPath))
             self.saveDataset(self.filteredSamplesPath)  # Saving tf samples
         else:
             self.loadDataset(self.filteredSamplesPath)
