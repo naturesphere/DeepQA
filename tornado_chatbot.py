@@ -108,11 +108,16 @@ def make_app(db):
     ],db=db)
 
 if __name__ == "__main__":
+    #parse args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=8000, help='port')
+    parser.add_argument('--modelTag', type=str, default='server', help='model suffix')
+    args = parser.parse_args(sys.argv[1:])
 #    wsc = WSClient()
 #    websocket_connect('ws://192.168.1.109:1234/chat',ioloop,callback=wsc.on_connected,on_message_callback=wsc.on_message)
     # chat bot
     BOT = chatbot.Chatbot()
-    BOT.main(['--modelTag', 'server', '--test', 'daemon', '--rootDir','.'])
+    BOT.main(['--modelTag', args.modelTag, '--test', 'daemon', '--rootDir','.'])
 
     # mongdb client
     server_site = '127.0.0.1'
@@ -123,12 +128,7 @@ if __name__ == "__main__":
     CLTN = DB[colletion]
 
     #system arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--port',type=int,default=8000,help='port')
     app = make_app(DB)
-    args = parser.parse_args(sys.argv[1:])
-    print(type(args.port))
-    print(args.port)
     app.listen(args.port)
     IOLoop.current().start()
     
