@@ -32,6 +32,7 @@ from chatbot.corpus.opensubsdata import OpensubsData
 from chatbot.corpus.scotusdata import ScotusData
 from chatbot.corpus.ubuntudata import UbuntuData
 from chatbot.corpus.lightweightdata import LightweightData
+from chatbot.corpus.mongodata import MongoData
 
 
 class Batch:
@@ -55,6 +56,7 @@ class TextData:
         ('scotus', ScotusData),
         ('ubuntu', UbuntuData),
         ('lightweight', LightweightData),
+        ('mongo', MongoData),
     ])
 
     @staticmethod
@@ -258,16 +260,24 @@ class TextData:
                 for crp in self.args.corpus:
                     optional = ''
                     corpusDir = os.path.join(self.args.rootDir, 'data', crp)
-                    if crp != 'lightweight':
-                        corpusData = TextData.availableCorpus[crp](corpusDir)
-                        Conversatons += corpusData.getConversations()
-                    else:
+                    if crp == 'lightweight':
                         if not self.args.datasetTag:
                             raise ValueError('Use the --datasetTag to define the lightweight file to use.')
                         for dt in self.args.datasetTag:
                             optional = os.sep + dt  # HACK: Forward the filename
                             corpusData = TextData.availableCorpus[crp](corpusDir + optional)
                             Conversatons += corpusData.getConversations()
+                    elif crp == 'mongo':
+                        corpusData = TextData.availableCorpus[crp](
+                            self.args.collectionName, 
+                            self.args.databaseName,
+                            self.args.host,
+                            self.args.port)
+                        Conversatons += corpusData.getConversations()
+                    else:
+                        corpusData = TextData.availableCorpus[crp](corpusDir)
+                        Conversatons += corpusData.getConversations()                    
+                print(Conversatons)
                 self.createFullCorpus(Conversatons)
                 self.saveDataset(self.fullSamplesPath)
             else:
