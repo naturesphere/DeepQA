@@ -269,7 +269,7 @@ class TextData:
                             Conversatons += corpusData.getConversations()
                     elif crp == 'mongo':
                         corpusData = TextData.availableCorpus[crp](
-                            self.args.collectionName, 
+                            self.args.collectionNames, 
                             self.args.databaseName,
                             self.args.host,
                             self.args.port)

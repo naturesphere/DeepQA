@@ -115,7 +115,7 @@ class Chatbot:
         datasetArgs.add_argument('--host', type=str, default='127.0.0.1', help='mongo host ip')
         datasetArgs.add_argument('--port', type=int, default=27017, help='mongo host port')
         datasetArgs.add_argument('--databaseName', type=str, default='chatbotDB', help='mongo database name')
-        datasetArgs.add_argument('--collectionName', type=str, default='day_20171020', help='mongo database name')
+        datasetArgs.add_argument('--collectionNames', type=str, default=[], nargs='+', help='mongo database name')
         datasetArgs.add_argument('--ratioDataset', type=float, default=1.0, help='ratio of dataset used to avoid using the whole dataset')  # Not implemented, useless ?
         datasetArgs.add_argument('--maxLength', type=int, default=25, help='maximum length of the sentence (for input and output), define number of maximum step of the RNN')
         datasetArgs.add_argument('--filterVocab', type=int, default=1, help='remove rarelly used words (by default words used only once). 0 to keep all words.')
@@ -159,8 +159,8 @@ class Chatbot:
         #tf.logging.set_verbosity(tf.logging.INFO) # DEBUG, INFO, WARN (default), ERROR, or FATAL
 
         self.loadModelParams()  # Update the self.modelDir and self.globStep, for now, not used when loading Model (but need to be called before _getSummaryName)
-
         self.textData = TextData(self.args)
+        # return # for see the dataset
         # TODO: Add a mode where we can force the input of the decoder // Try to visualize the predictions for
         # each word of the vocabulary / decoder input
         # TODO: For now, the model are trained for a specific dataset (because of the maxLength which define the

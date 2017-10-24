@@ -34,28 +34,38 @@ import pprint
 
 class MongoData:
 
-    def __init__(self, collectionName='day_20171021', databaseName='chatbotDB', host='127.0.0.1', port=27017):
+    def __init__(self, collectionNames=[], databaseName='chatbotDB', host='127.0.0.1', port=27017):
         self.host = host
         self.port = port
         self.databaseName = databaseName
-        self.collectionName = collectionName
+        self.collectionNames = collectionNames
+        self.client = MongoClient(self.host, self.port)
+        self.conversations = []
         try:
-            self.conversations = self.loadConversations()
+            self.loadDatabaseConversatins()
         except:
             self.conversations = []
             raise ValueError('can not connect to mongodb.')
 
-    def loadConversations(self):
-        client = MongoClient(self.host, self.port)
-        cln = client[self.databaseName][self.collectionName]
+    def loadDatabaseConversatins(self):
+        if self.collectionNames==[]:# default [] means all collections
+            self.collectionNames = self.client[self.databaseName].collection_names()
+
+        for clt in self.collectionNames:
+            self.conversations += self.loadCollectionConversations(clt)
+
+        return self.conversations
+
+    def loadCollectionConversations(self, collectionName):
+        clt = self.client[self.databaseName][collectionName]
         # 读取独立ip
-        unique_ips = cln.distinct('ip',{})
+        unique_ips = clt.distinct('ip',{})
         # print("unique ip count:",len(unique_ips))
         conversations = []
         # 读取每个ip下的对话
         for ip in unique_ips:
             linesBuffer = []
-            ctxs = cln.find({'ip':ip})
+            ctxs = clt.find({'ip':ip})
             for ctx in ctxs:
                 linesBuffer.append({"text":ctx['question']})
                 linesBuffer.append({"text":ctx['answer']})
@@ -69,7 +79,7 @@ class MongoData:
         return self.conversations
 
 if __name__=="__main__":
-    # print("in main")
-    md = MongoData(host='192.168.1.253')
+    print("in main")
+    md = MongoData(host='192.168.1.253',collectionNames=[])
     cns = md.getConversations()
     print(cns)
