@@ -277,7 +277,7 @@ class TextData:
                     else:
                         corpusData = TextData.availableCorpus[crp](corpusDir)
                         Conversatons += corpusData.getConversations()                    
-                print(Conversatons)
+                # print(Conversatons)
                 self.createFullCorpus(Conversatons)
                 self.saveDataset(self.fullSamplesPath)
             else:
