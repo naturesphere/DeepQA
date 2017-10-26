@@ -75,6 +75,8 @@ class Chatbot:
         self.TEST_OUT_SUFFIX = '_predictions.txt'
         self.SENTENCES_PREFIX = ['Q: ', 'A: ']
 
+        self.previous_answer = ''
+
     @staticmethod
     def parseArgs(args):
         """
@@ -367,7 +369,10 @@ class Chatbot:
         ops, feedDict = self.model.step(batch)
         output = self.sess.run(ops[0], feedDict)  # TODO: Summarize the output too (histogram, ...)
         answer = self.textData.deco2sentence(output)
-
+        if answer == self.previous_answer:
+            answer = self.randomResponse()
+        self.previous_answer = answer
+        
         return answer
 
     def daemonPredict(self, sentence):
@@ -379,6 +384,7 @@ class Chatbot:
         """
         return self.textData.sequence2str(
             self.singlePredict(sentence),
+            # self.randomResponse(),
             clean=True
         )
 
@@ -455,6 +461,10 @@ class Chatbot:
         sess.run(em_in.assign(initW))
         sess.run(em_out.assign(initW))
 
+    def randomResponse(self): # generate random sentence, trick to keep bots from talking different context
+        idx = np.random.randint(self.textData.getSampleSize())
+        q,a = self.textData.trainingSamples[idx]
+        return q
 
     def managePreviousModel(self, sess):
         """ Restore or reset the model, depending of the parameters

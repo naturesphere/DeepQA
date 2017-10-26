@@ -652,7 +652,6 @@ class TextData:
             print()
         pass
 
-
 def tqdm_wrap(iterable, *args, **kwargs):
     """Forward an iterable eventually wrapped around a tqdm decorator
     The iterable is only wrapped if the iterable contains enough elements
