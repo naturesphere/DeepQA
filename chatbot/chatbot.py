@@ -367,11 +367,14 @@ class Chatbot:
 
         # Run the model
         ops, feedDict = self.model.step(batch)
+        print("singlePredict")
         output = self.sess.run(ops[0], feedDict)  # TODO: Summarize the output too (histogram, ...)
+        print(len(output))
+        print(output[0])
         answer = self.textData.deco2sentence(output)
-        if answer == self.previous_answer:
-            answer = self.randomResponse()
-        self.previous_answer = answer
+        # if answer == self.previous_answer:
+        #     answer = self.randomResponse()
+        # self.previous_answer = answer
         
         return answer
 

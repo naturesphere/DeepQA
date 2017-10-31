@@ -20,9 +20,21 @@ Model to predict the next sentence given an input sequence
 """
 
 import tensorflow as tf
-
+import numpy as np
+import copy
 from chatbot.textdata import Batch
-
+from tensorflow.contrib.rnn.python.ops import core_rnn_cell
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import embedding_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import rnn
+from tensorflow.python.ops import rnn_cell_impl
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.util import nest
 
 class ProjectionOp:
     """ Single layer perceptron
@@ -103,6 +115,92 @@ class Model:
         # Construct the graphs
         self.buildNetwork()
 
+    def diverse_embedding_rnn_decoder(self,
+        decoder_inputs,
+        initial_state,
+        cell,
+        num_symbols,
+        embedding_size,
+        output_projection=None,
+        feed_previous=False,
+        update_embedding_for_previous=True,
+        scope=None,
+        k=3 ):
+        with variable_scope.variable_scope(scope or "embedding_rnn_decoder") as scope:
+            if output_projection is not None:
+                dtype = scope.dtype
+                proj_weights = ops.convert_to_tensor(output_projection[0], dtype=dtype)
+                proj_weights.get_shape().assert_is_compatible_with([None, num_symbols])
+                proj_biases = ops.convert_to_tensor(output_projection[1], dtype=dtype)
+                proj_biases.get_shape().assert_is_compatible_with([num_symbols])
+
+            embedding = variable_scope.get_variable("embedding", [num_symbols, embedding_size])
+            def _extract_one_of_topk_and_embed(embedding, k=3,
+                              output_projection=None,
+                              update_embedding=True
+                              ):
+                def loop_function(prev, _):
+                    if output_projection is not None:
+                        prev = nn_ops.xw_plus_b(prev, output_projection[0], output_projection[1])
+                    # _, prev_symbols = nn_ops.top_k(prev, k) # prev_symbols.shape = batchsize * k
+                    # idx = np.random.randint(k)
+                    # print("idx = "+ str(idx))
+                    # prev_symbol = prev_symbols[:,idx]
+
+                    prev_symbol = math_ops.argmax(prev, 1)
+                    # prev_symbol = prev[:,1]
+                    emb_prev = embedding_ops.embedding_lookup(embedding, prev_symbol)
+                    if not update_embedding:
+                        emb_prev = array_ops.stop_gradient(emb_prev)
+                    return emb_prev
+                return loop_function
+
+            loop_function = _extract_one_of_topk_and_embed( embedding, k, output_projection,
+                update_embedding_for_previous) if feed_previous else None
+            emb_inp = (embedding_ops.embedding_lookup(embedding, i) for i in decoder_inputs)
+            return tf.contrib.legacy_seq2seq.rnn_decoder(emb_inp, initial_state, cell, loop_function=loop_function)
+
+    def diverse_embedding_rnn_seq2seq(self,
+        encoder_inputs,
+        decoder_inputs,
+        cell,
+        num_encoder_symbols,
+        num_decoder_symbols,
+        embedding_size,
+        output_projection=None,
+        feed_previous=False,
+        dtype=None,
+        scope=None,
+        k=3):
+        with variable_scope.variable_scope(scope or "embedding_rnn_seq2seq") as scope:
+            if dtype is not None:
+                scope.set_dtype(dtype)
+            else:
+                dtype = scope.dtype
+        print("diverse_embedding_rnn_seq2seq")
+        # Encoder.
+        encoder_cell = copy.deepcopy(cell)
+        encoder_cell = core_rnn_cell.EmbeddingWrapper(
+            encoder_cell,
+            embedding_classes=num_encoder_symbols,
+            embedding_size=embedding_size)
+        _, encoder_state = rnn.static_rnn(encoder_cell, encoder_inputs, dtype=dtype)
+
+        # Decoder.
+        if output_projection is None:
+            cell = core_rnn_cell.OutputProjectionWrapper(cell, num_decoder_symbols)
+
+        # if isinstance(feed_previous, bool):
+        return self.diverse_embedding_rnn_decoder(
+            decoder_inputs,
+            encoder_state,
+            cell,
+            num_decoder_symbols,
+            embedding_size,
+            output_projection=output_projection,
+            feed_previous=feed_previous,
+            k=k)
+
     def buildNetwork(self):
         """ Create the computational graph
         """
@@ -168,7 +266,18 @@ class Model:
         # Define the network
         # Here we use an embedding model, it takes integer as input and convert them into word vector for
         # better word representation
-        decoderOutputs, states = tf.contrib.legacy_seq2seq.embedding_rnn_seq2seq(
+        # decoderOutputs, states = tf.contrib.legacy_seq2seq.embedding_rnn_seq2seq(
+        #     self.encoderInputs,  # List<[batch=?, inputDim=1]>, list of size args.maxLength
+        #     self.decoderInputs,  # For training, we force the correct output (feed_previous=False)
+        #     encoDecoCell,
+        #     self.textData.getVocabularySize(),
+        #     self.textData.getVocabularySize(),  # Both encoder and decoder have the same number of class
+        #     embedding_size=self.args.embeddingSize,  # Dimension of each word
+        #     output_projection=outputProjection.getWeights() if outputProjection else None,
+        #     feed_previous=bool(self.args.test)  # When we test (self.args.test), we use previous output as next input (feed_previous)
+        # )
+        print("before self.diverse_embedding_rnn_seq2seq")
+        decoderOutputs, states = self.diverse_embedding_rnn_seq2seq(
             self.encoderInputs,  # List<[batch=?, inputDim=1]>, list of size args.maxLength
             self.decoderInputs,  # For training, we force the correct output (feed_previous=False)
             encoDecoCell,
@@ -176,8 +285,10 @@ class Model:
             self.textData.getVocabularySize(),  # Both encoder and decoder have the same number of class
             embedding_size=self.args.embeddingSize,  # Dimension of each word
             output_projection=outputProjection.getWeights() if outputProjection else None,
-            feed_previous=bool(self.args.test)  # When we test (self.args.test), we use previous output as next input (feed_previous)
+            feed_previous=bool(self.args.test),  # When we test (self.args.test), we use previous output as next input (feed_previous)
+            k=3
         )
+
         # print("buildNetwork: self.textData.getVocabularySize {}".format(self.textData.getVocabularySize()))
         # TODO: When the LSTM hidden size is too big, we should project the LSTM output into a smaller space (4086 => 2046): Should speed up
         # training and reduce memory usage. Other solution, use sampling softmax
@@ -185,6 +296,7 @@ class Model:
         # For testing only
         if self.args.test:
             if not outputProjection:
+                print("test is decoderOutputs")
                 self.outputs = decoderOutputs
             else:
                 self.outputs = [outputProjection(output) for output in decoderOutputs]
