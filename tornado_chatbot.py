@@ -76,7 +76,6 @@ class MainHandler(tornado.web.RequestHandler):
             inputKeys = self.get_argument('kw').strip()
             langKeys = self.get_argument('lang').strip()
             apiKeys = self.get_argument('apikey').strip()
-
             if apiKeys == "b1275afe-39f6-39c4-77b4-e5328dddba7" and inputKeys:
 #                wsc.sentMsg(inputKeys, langKeys)
 #                response = wsc.getMsg()

@@ -626,13 +626,27 @@ class TextData:
         """Decode the output of the decoder and return a human friendly sentence
         decoderOutputs (list<np.array>):
         """
+        k=10
         sequence = []
 
         # Choose the words with the highest prediction score
         for out in decoderOutputs:
+            # print("maxout: " + str(np.argmax(out)))
+            # print("out type: " + str(type(out)))
+            # print("out shape: " + str(out.shape))
+            # ck = (np.argsort(out)[0])[-k:]
+            # print("ck: "+ str(ck))
+            # symbel = np.random.choice(ck)
+            # sequences.append(ck)            
             sequence.append(np.argmax(out))  # Adding each predicted word ids
 
-        return sequence  # We return the raw sentence. Let the caller do some cleaning eventually
+        # cs = np.random.choice(k)
+        # print("selected sequence: " + str(cs))
+        # selected_sequence = []
+        # for s in sequences:
+        #     selected_sequence.append(s[cs])
+        # return selected_sequence  # We return the raw sentence. Let the caller do some cleaning eventually
+        return sequence
 
     def playDataset(self):
         # """Print a random dialogue from the dataset

@@ -115,6 +115,7 @@ class Model:
         # Construct the graphs
         self.buildNetwork()
 
+    '''
     def diverse_embedding_rnn_decoder(self,
         decoder_inputs,
         initial_state,
@@ -200,6 +201,7 @@ class Model:
             output_projection=output_projection,
             feed_previous=feed_previous,
             k=k)
+    '''
 
     def buildNetwork(self):
         """ Create the computational graph
@@ -266,18 +268,7 @@ class Model:
         # Define the network
         # Here we use an embedding model, it takes integer as input and convert them into word vector for
         # better word representation
-        # decoderOutputs, states = tf.contrib.legacy_seq2seq.embedding_rnn_seq2seq(
-        #     self.encoderInputs,  # List<[batch=?, inputDim=1]>, list of size args.maxLength
-        #     self.decoderInputs,  # For training, we force the correct output (feed_previous=False)
-        #     encoDecoCell,
-        #     self.textData.getVocabularySize(),
-        #     self.textData.getVocabularySize(),  # Both encoder and decoder have the same number of class
-        #     embedding_size=self.args.embeddingSize,  # Dimension of each word
-        #     output_projection=outputProjection.getWeights() if outputProjection else None,
-        #     feed_previous=bool(self.args.test)  # When we test (self.args.test), we use previous output as next input (feed_previous)
-        # )
-        print("before self.diverse_embedding_rnn_seq2seq")
-        decoderOutputs, states = self.diverse_embedding_rnn_seq2seq(
+        decoderOutputs, states = tf.contrib.legacy_seq2seq.embedding_rnn_seq2seq(
             self.encoderInputs,  # List<[batch=?, inputDim=1]>, list of size args.maxLength
             self.decoderInputs,  # For training, we force the correct output (feed_previous=False)
             encoDecoCell,
@@ -285,9 +276,21 @@ class Model:
             self.textData.getVocabularySize(),  # Both encoder and decoder have the same number of class
             embedding_size=self.args.embeddingSize,  # Dimension of each word
             output_projection=outputProjection.getWeights() if outputProjection else None,
-            feed_previous=bool(self.args.test),  # When we test (self.args.test), we use previous output as next input (feed_previous)
-            k=3
+            feed_previous=bool(self.args.test)  # When we test (self.args.test), we use previous output as next input (feed_previous)
         )
+
+        # print("before self.diverse_embedding_rnn_seq2seq")
+        # decoderOutputs, states = self.diverse_embedding_rnn_seq2seq(
+        #     self.encoderInputs,  # List<[batch=?, inputDim=1]>, list of size args.maxLength
+        #     self.decoderInputs,  # For training, we force the correct output (feed_previous=False)
+        #     encoDecoCell,
+        #     self.textData.getVocabularySize(),
+        #     self.textData.getVocabularySize(),  # Both encoder and decoder have the same number of class
+        #     embedding_size=self.args.embeddingSize,  # Dimension of each word
+        #     output_projection=outputProjection.getWeights() if outputProjection else None,
+        #     feed_previous=bool(self.args.test),  # When we test (self.args.test), we use previous output as next input (feed_previous)
+        #     k=3
+        # )
 
         # print("buildNetwork: self.textData.getVocabularySize {}".format(self.textData.getVocabularySize()))
         # TODO: When the LSTM hidden size is too big, we should project the LSTM output into a smaller space (4086 => 2046): Should speed up
@@ -296,7 +299,7 @@ class Model:
         # For testing only
         if self.args.test:
             if not outputProjection:
-                print("test is decoderOutputs")
+                # print("test is decoderOutputs")
                 self.outputs = decoderOutputs
             else:
                 self.outputs = [outputProjection(output) for output in decoderOutputs]

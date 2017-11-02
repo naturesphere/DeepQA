@@ -75,7 +75,7 @@ class Chatbot:
         self.TEST_OUT_SUFFIX = '_predictions.txt'
         self.SENTENCES_PREFIX = ['Q: ', 'A: ']
 
-        self.previous_answer = ''
+        # self.previous_answer = ''
 
     @staticmethod
     def parseArgs(args):
@@ -311,7 +311,8 @@ class Chatbot:
                         nbIgnored += 1
                         continue  # Back to the beginning, try again
 
-                    predString = '{x[0]}{0}\n{x[1]}{1}\n\n'.format(question, self.textData.sequence2str(answer, clean=True), x=self.SENTENCES_PREFIX)
+                    # predString = '{x[0]}{0}\n{x[1]}{1}\n\n'.format(question, self.textData.sequence2str(answer, clean=True), x=self.SENTENCES_PREFIX)
+                    predString = '{x[0]}{0}\n{x[1]}{1}\n\n'.format(question, answer, x=self.SENTENCES_PREFIX)
                     if self.args.verbose:
                         tqdm.write(predString)
                     f.write(predString)
@@ -338,15 +339,16 @@ class Chatbot:
 
             questionSeq = []  # Will be contain the question as seen by the encoder
             answer = self.singlePredict(question, questionSeq)
+            # print("answer: " + str(answer))
             if not answer:
                 print('Warning: sentence too long, sorry. Maybe try a simpler sentence.')
                 continue  # Back to the beginning, try again
 
-            print('{}{}'.format(self.SENTENCES_PREFIX[1], self.textData.sequence2str(answer, clean=True)))
-
+            # print('{}{}'.format(self.SENTENCES_PREFIX[1], self.textData.sequence2str(answer, clean=True)))
+            print('{}{}'.format(self.SENTENCES_PREFIX[1], answer))
             if self.args.verbose:
                 print(self.textData.batchSeq2str(questionSeq, clean=True, reverse=True))
-                print(self.textData.sequence2str(answer))
+                print(answer)
 
             print()
 
@@ -367,16 +369,13 @@ class Chatbot:
 
         # Run the model
         ops, feedDict = self.model.step(batch)
-        print("singlePredict")
         output = self.sess.run(ops[0], feedDict)  # TODO: Summarize the output too (histogram, ...)
-        print(len(output))
-        print(output[0])
         answer = self.textData.deco2sentence(output)
         # if answer == self.previous_answer:
         #     answer = self.randomResponse()
         # self.previous_answer = answer
-        
-        return answer
+        # return answer
+        return self.textData.sequence2str(answer, clean=True)
 
     def daemonPredict(self, sentence):
         """ Return the answer to a given sentence (same as singlePredict() but with additional cleaning)
@@ -385,11 +384,16 @@ class Chatbot:
         Return:
             str: the human readable sentence
         """
-        return self.textData.sequence2str(
-            self.singlePredict(sentence),
-            # self.randomResponse(),
-            clean=True
-        )
+        
+        # return self.textData.sequence2str(
+        #     self.singlePredict(sentence),
+        #     # self.randomResponse(),
+        #     clean=True
+        # )
+        s1 = ""
+        if 0==np.random.randint(6):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
+            s1 = self.textData.sequence2str(self.randomResponse(), clean=True)
+        return self.singlePredict(sentence) +". " + s1
 
     def daemonClose(self):
         """ A utility function to close the daemon when finish
