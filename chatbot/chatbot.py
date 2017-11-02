@@ -390,10 +390,12 @@ class Chatbot:
         #     # self.randomResponse(),
         #     clean=True
         # )
-        s1 = ""
+        s0 = self.singlePredict(sentence)
         if 0==np.random.randint(6):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
-            s1 = ". " + self.textData.sequence2str(self.randomResponse(), clean=True)
-        return self.singlePredict(sentence) + s1
+            s0 = self.textData.sequence2str(self.randomResponse(), clean=True) + ". " + s0
+        if 0==np.random.randint(4):  # 聊天机器人有1/4的概率后面随机附加一条内容，以此来增加多样性
+            s0 = ". " + self.textData.sequence2str(self.randomResponse(), clean=True)
+        return s0
 
     def daemonClose(self):
         """ A utility function to close the daemon when finish
