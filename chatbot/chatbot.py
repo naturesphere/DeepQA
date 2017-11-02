@@ -393,7 +393,7 @@ class Chatbot:
         s1 = ""
         if 0==np.random.randint(6):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
             s1 = self.textData.sequence2str(self.randomResponse(), clean=True)
-        return self.singlePredict(sentence) +". " + s1
+        return self.singlePredict(sentence) + s1
 
     def daemonClose(self):
         """ A utility function to close the daemon when finish
