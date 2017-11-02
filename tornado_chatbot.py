@@ -82,8 +82,8 @@ class MainHandler(tornado.web.RequestHandler):
 #                response = ChatbotManager.callBot(inputKeys)
                 response = BOT.daemonPredict(inputKeys)
                 # reString = '{ "result": 100, "response": \''+str(response)+'\'}'
-                # reString = '{"response":"'+str(response)+'"' + ',"id":88888888,"result":100,"msg":"OK."}'
-                reString = '"response":"{}","id":88888888,"result":100,"msg":"OK."'.format(str(response))
+                reString = '{"response":"'+str(response)+'"' + ',"id":88888888,"result":100,"msg":"OK."}'
+                # reString = '{"response":"{}","id":88888888,"result":100,"msg":"OK."}'.format(str(response))
                 self.write(reString)
                 try:    # write to mongdb
                     day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
