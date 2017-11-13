@@ -172,8 +172,8 @@ class Chatbot:
             print('Dataset created! Thanks for using this program')
             # return  # No need to go further
         # Prepare the model
-        # with tf.device(self.getDevice()):
-        self.model = Model(self.args, self.textData)
+        with tf.device(self.getDevice()):
+            self.model = Model(self.args, self.textData)
 
         # Saver/summaries
         self.writer = tf.summary.FileWriter(self._getSummaryName())
