@@ -343,6 +343,11 @@ class Chatbot:
             if not answer:
                 print('Warning: sentence too long, sorry. Maybe try a simpler sentence.')
                 continue  # Back to the beginning, try again
+            
+            if self.textData.isDirtySentence(answer):
+                print("rude words")
+            else:
+                print("gental words")
 
             # print('{}{}'.format(self.SENTENCES_PREFIX[1], self.textData.sequence2str(answer, clean=True)))
             print('{}{}'.format(self.SENTENCES_PREFIX[1], answer))

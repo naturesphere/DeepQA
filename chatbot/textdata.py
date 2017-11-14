@@ -104,7 +104,7 @@ class TextData:
         self._printStats()
 
         self.banwords = ['fuck','fucking','shit','bitch','idiot','ass',
-                        'asshole','bullshit','slut','bastard','jerk']
+                        'asshole','bullshit','slut','bastard','jerk','hi','link']
 
         if self.args.playDataset:
             self.playDataset()
@@ -653,8 +653,10 @@ class TextData:
 
     def isDirtySentence(self, sentence):
         lst = [w.strip(string.punctuation) for w in sentence.split()]
+        print(lst)
+        # print(self.banwords)
         for bw in self.banwords:
-            if bw in lst:
+            if bw.lower() in lst:
                 return True
         return False
 
