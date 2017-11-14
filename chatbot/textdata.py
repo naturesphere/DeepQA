@@ -103,6 +103,9 @@ class TextData:
         # Plot some stats:
         self._printStats()
 
+        self.banwords = ['fuck','fucking','shit','bitch','idiot','ass',
+                        'asshole','bullshit','slut','bastard','jerk']
+
         if self.args.playDataset:
             self.playDataset()
 
@@ -647,6 +650,13 @@ class TextData:
         #     selected_sequence.append(s[cs])
         # return selected_sequence  # We return the raw sentence. Let the caller do some cleaning eventually
         return sequence
+
+    def isDirtySentence(self, sentence):
+        lst = [w.strip(string.punctuation) for w in sentence.split()]
+        for bw in self.banwords:
+            if bw in lst:
+                return True
+        return False
 
     def playDataset(self):
         # """Print a random dialogue from the dataset

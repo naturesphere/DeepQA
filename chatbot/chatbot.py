@@ -391,10 +391,16 @@ class Chatbot:
         #     clean=True
         # )
         s0 = self.singlePredict(sentence)
+        if self.textData.isDirtySentence(s0):
+            s0 = "sorry"            
         if 0==np.random.randint(10):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
-            s0 = self.textData.sequence2str(self.randomResponse(), clean=True) + ". " + s0
+            sr = self.textData.sequence2str(self.randomResponse(), clean=True)
+            if not self.textData.isDirtySentence(s0):
+                s0 = sr.strip(string.punctuation) + ". " + s0
         if 0==np.random.randint(10):  # 聊天机器人有1/4的概率后面随机附加一条内容，以此来增加多样性
-            s0 += ". " + self.textData.sequence2str(self.randomResponse(), clean=True)
+            sr = self.textData.sequence2str(self.randomResponse(), clean=True)
+            if not self.textData.isDirtySentence(s0):
+                s0 = s0.strip(string.punctuation) + ". " + sr
         return s0
 
     def daemonClose(self):
