@@ -396,7 +396,9 @@ class Chatbot:
         #     clean=True
         # )
         s0 = self.singlePredict(sentence)
-        if self.textData.isDirtySentence(s0):
+        f1 = self.textData.isDirtySentence(s0)
+        print(f1)
+        if f1:
             s0 = "sorry"            
         if 0==np.random.randint(10):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
             sr = self.textData.sequence2str(self.randomResponse(), clean=True)
