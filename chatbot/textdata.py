@@ -652,11 +652,11 @@ class TextData:
         return sequence
 
     def isDirtySentence(self, sentence):
-        lst = [w.strip(string.punctuation) for w in sentence.split()]
+        lst = [w.strip(string.punctuation).lower() for w in sentence.split()]
         print(lst)
         # print(self.banwords)
         for bw in self.banwords:
-            if bw.lower() in lst:
+            if bw in lst:
                 return True
         return False
 
