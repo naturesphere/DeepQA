@@ -104,7 +104,7 @@ class TextData:
         self._printStats()
 
         self.banwords = ['fuck','fucking','shit','bitch','idiot','ass',
-                        'asshole','bullshit','slut','bastard','jerk','sex']
+                        'asshole','bullshit','slut','bastard','jerk','sex','hi']
 
         if self.args.playDataset:
             self.playDataset()
