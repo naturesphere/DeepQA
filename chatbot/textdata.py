@@ -653,7 +653,7 @@ class TextData:
 
     def isDirtySentence(self, sentence):
         lst = [w.strip(string.punctuation).lower() for w in sentence.split()]
-        print(lst)
+        # print(lst)
         # print(self.banwords)
         for bw in self.banwords:
             if bw in lst:
