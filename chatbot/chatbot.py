@@ -401,13 +401,13 @@ class Chatbot:
         if f1:
             s0 = "sorry"     
         f2 = 0       
-        pnum = 5
+        pnum = 6
         if 0==np.random.randint(pnum):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
             f2 = 1
             sr = self.textData.sequence2str(self.randomResponse(), clean=True)
             if not self.textData.isDirtySentence(s0):
                 s0 = sr.strip(string.punctuation) + ". " + s0
-        pnum = 5 if f2==0 else 10 
+        pnum = 6 if f2==0 else 10 
         if 0==np.random.randint(pnum):  # 聊天机器人有1/4的概率后面随机附加一条内容，以此来增加多样性
             sr = self.textData.sequence2str(self.randomResponse(), clean=True)
             if not self.textData.isDirtySentence(s0):
