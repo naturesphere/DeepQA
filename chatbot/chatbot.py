@@ -399,16 +399,16 @@ class Chatbot:
         f1 = self.textData.isDirtySentence(s0)
         print(f1)
         if f1:
-            s0 = "sorry"     
+            s0 = "..."     
         f2 = 0       
         pnum = 6
-        if 0==np.random.randint(pnum):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
+        if -1==np.random.randint(pnum):  # 聊天机器人有1/6的概率随机附加一条内容，以此来增加多样性
             f2 = 1
             sr = self.textData.sequence2str(self.randomResponse(), clean=True)
             if not self.textData.isDirtySentence(sr):
                 s0 = sr.strip(string.punctuation) + ". " + s0
         pnum = 6 if f2==0 else 10 
-        if 0==np.random.randint(pnum):  # 聊天机器人有1/4的概率后面随机附加一条内容，以此来增加多样性
+        if -1==np.random.randint(pnum):  # 聊天机器人有1/4的概率后面随机附加一条内容，以此来增加多样性
             sr = self.textData.sequence2str(self.randomResponse(), clean=True)
             if not self.textData.isDirtySentence(sr):
                 s0 = s0.strip(string.punctuation) + ". " + sr
