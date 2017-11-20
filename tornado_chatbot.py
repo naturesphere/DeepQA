@@ -105,44 +105,10 @@ class MainHandler(tornado.web.RequestHandler):
             self.write("Err: %s" % e)
 
     def get(self):   
-        reString = '{ "result": 0, "response": ":-)"}'
-#        global wsc
-        global BOT, CLTN,BOT2
-        try:
-            inputKeys = self.get_argument('kw').strip()
-            langKeys = self.get_argument('lang').strip()
-            apiKeys = self.get_argument('apikey').strip()
-            if apiKeys == "b1275afe-39f6-39c4-77b4-e5328dddba7" and inputKeys:
-#                wsc.sentMsg(inputKeys, langKeys)
-#                response = wsc.getMsg()
-#                response = ChatbotManager.callBot(inputKeys)
-                if langKeys=='zh':
-                    response = BOT2.daemonPredict(inputKeys)
-                else:
-                    response = BOT.daemonPredict(inputKeys)
-                # reString = '{ "result": 100, "response": \''+str(response)+'\'}'
-                reString = '{"response":"'+str(response)+'"' + ',"id":88888888,"result":100,"msg":"OK."}'
-                # reString = '{"response":"{}","id":88888888,"result":100,"msg":"OK."}'.format(str(response))
-                self.write(reString)
-                try:    # write to mongdb
-                    day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
-                    moment = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                    record = {  'day':day,
-                                'moment':moment,
-                                'ip':self.request.remote_ip,
-                                'question':inputKeys,
-                                'answer':response
-                            }
-                    CLTN.insert_one(record)
-                except Exception as msg:
-                    print(msg)
-            else:
-                self.write(reString)
-        except Exception as e:
-            self.write("Err: %s" % e)
+       self.retriveInput()
 
     def post(self):
-        retriveInput()
+        self.retriveInput()
 
 def make_app(db):
     return tornado.web.Application([
