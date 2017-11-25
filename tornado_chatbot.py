@@ -16,6 +16,8 @@ import motor.motor_tornado
 import time
 import sys
 import argparse
+from chatterbot import ChatBot
+
 
 langs = ["bangla","chinese","french","german","hebrew","hindi","indonesia",
          "italian","marathi","portuguese","russian","spanish","tchinese","telugu","turkish"]
@@ -72,16 +74,15 @@ class MainHandler(tornado.web.RequestHandler):
     def retriveInput(self):
         reString = '{ "result": 0, "response": ":-)"}'
 
-        global BOT, CLTN,BOT2
+        global BOT, CLTN, Cbot, swflag
         try:
             inputKeys = self.get_argument('kw').strip()
             langKeys = self.get_argument('lang').strip()
             apiKeys = self.get_argument('apikey').strip()
             if apiKeys == "b1275afe-39f6-39c4-77b4-e5328dddba7" and inputKeys:
 
-                if langKeys=='zh':
-                    response = BOT2.daemonPredict(inputKeys)
-                else:
+                response = Cbot.get_response(inputKeys)
+                if response == swflag:
                     response = BOT.daemonPredict(inputKeys)
                 # reString = '{ "result": 100, "response": \''+str(response)+'\'}'
                 reString = '{"response":"'+str(response)+'"' + ',"id":88888888,"result":100,"msg":"OK."}'
@@ -128,6 +129,27 @@ if __name__ == "__main__":
     BOT.main(['--modelTag', args.modelTag, '--test', 'daemon', '--rootDir','.'])
     # BOT2 = chatbot.Chatbot()
     # BOT2.main(['--modelTag', '1114', '--test', 'daemon', '--rootDir','.'])
+    swflag = '>_<'
+    Cbot = ChatBot(
+        "Terminal",
+        storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
+        logic_adapters=[
+            "chatterbot.logic.MathematicalEvaluation",
+            # "chatterbot.logic.TimeLogicAdapter",
+            "chatterbot.logic.BestMatch",
+            {
+                'import_path':'chatterbot.logic.LowConfidenceAdapter',
+                'threshold':0.8,
+                'default_response':swflag
+            }
+        ],
+        # filters=['chatterbot.filters.RepetitiveResponseFilter'],
+        # input_adapter="chatterbot.input.TerminalAdapter",
+        # output_adapter="chatterbot.output.TerminalAdapter",
+        # trainer='chatterbot.trainers.ListTrainer',
+        database="chatterbot-database",
+        read_only=True,
+    )
 
     # mongdb client
     server_site = '127.0.0.1'
