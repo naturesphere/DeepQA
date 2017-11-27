@@ -18,10 +18,6 @@ import sys
 import argparse
 from chatterbot import ChatBot
 
-
-langs = ["bangla","chinese","french","german","hebrew","hindi","indonesia",
-         "italian","marathi","portuguese","russian","spanish","tchinese","telugu","turkish"]
-
 logging.basicConfig(level=logging.INFO)
 
 class WSClient(object):
@@ -74,30 +70,34 @@ class MainHandler(tornado.web.RequestHandler):
     def retriveInput(self):
         reString = '{ "result": 0, "response": ":-)"}'
 
-        global BOT, CLTN, Cbot, swflag
+        global BOT, DB, Cbots, swflag
         try:
             inputKeys = self.get_argument('kw').strip()
             langKeys = self.get_argument('lang').strip()
             apiKeys = self.get_argument('apikey').strip()
             if apiKeys == "b1275afe-39f6-39c4-77b4-e5328dddba7" and inputKeys:
-
-                response = Cbot.get_response(inputKeys)
-                if response == swflag:
+                Cbot = Cbots[langKeys]
+                response = swflag
+                if Cbot != None:
+                    response = Cbot.get_response(inputKeys)
+                if response == swflag and langKeys=='english':
                     response = BOT.daemonPredict(inputKeys)
+                
                 # reString = '{ "result": 100, "response": \''+str(response)+'\'}'
                 reString = '{"response":"'+str(response)+'"' + ',"id":88888888,"result":100,"msg":"OK."}'
                 # reString = '{"response":"{}","id":88888888,"result":100,"msg":"OK."}'.format(str(response))
                 self.write(reString)
                 try:    # write to mongdb
-                    day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
+                    # day = time.strftime('%Y-%m-%d',time.localtime(time.time()))
                     moment = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                    record = {  'day':day,
+                    record = {  
                                 'moment':moment,
                                 'ip':self.request.remote_ip,
                                 'question':inputKeys,
                                 'answer':response
                             }
-                    CLTN.insert_one(record)
+                    colletion = time.strftime('%Y%m%d',time.localtime(time.time())) 
+                    DB[colletion].insert_one(record)
                 except Exception as msg:
                     print(msg)
             else:
@@ -110,6 +110,34 @@ class MainHandler(tornado.web.RequestHandler):
 
     def post(self):
         self.retriveInput()
+
+def cbots_init(swflag):
+    langlist = ['bangla','chinese','custom','english','french','german','hebrew','hindi','indonesia','italian',
+                'marathi','portuguese','russian','spanish','swedish','tchinese','telugu','turkish']
+    # langlist = ['chinese','english']
+    Cbots = dict().fromkeys(langlist)
+    for lang in langlist:
+        Cbots[lang] = ChatBot(
+        lang,
+        storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
+        logic_adapters=[
+            "chatterbot.logic.MathematicalEvaluation",
+            # "chatterbot.logic.TimeLogicAdapter",
+            "chatterbot.logic.BestMatch",
+            {
+                'import_path':'chatterbot.logic.LowConfidenceAdapter',
+                'threshold':0.6,
+                'default_response':swflag
+            }
+        ],
+        # filters=['chatterbot.filters.RepetitiveResponseFilter'],
+        # input_adapter="chatterbot.input.TerminalAdapter",
+        # output_adapter="chatterbot.output.TerminalAdapter",
+        trainer='chatterbot.trainers.ChatterBotCorpusTrainer',
+        database = lang + "_db",
+        # read_only=True,
+        )
+    return Cbots
 
 def make_app(db):
     return tornado.web.Application([
@@ -129,27 +157,10 @@ if __name__ == "__main__":
     BOT.main(['--modelTag', args.modelTag, '--test', 'daemon', '--rootDir','.'])
     # BOT2 = chatbot.Chatbot()
     # BOT2.main(['--modelTag', '1114', '--test', 'daemon', '--rootDir','.'])
+
+    #chatterbot
     swflag = '>_<'
-    Cbot = ChatBot(
-        "Terminal",
-        storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
-        logic_adapters=[
-            "chatterbot.logic.MathematicalEvaluation",
-            # "chatterbot.logic.TimeLogicAdapter",
-            "chatterbot.logic.BestMatch",
-            {
-                'import_path':'chatterbot.logic.LowConfidenceAdapter',
-                'threshold':0.8,
-                'default_response':swflag
-            }
-        ],
-        # filters=['chatterbot.filters.RepetitiveResponseFilter'],
-        # input_adapter="chatterbot.input.TerminalAdapter",
-        # output_adapter="chatterbot.output.TerminalAdapter",
-        # trainer='chatterbot.trainers.ListTrainer',
-        database="chatterbot-database",
-        read_only=True,
-    )
+    Cbots = cbots_init(swflag)
 
     # mongdb client
     server_site = '127.0.0.1'
@@ -157,16 +168,8 @@ if __name__ == "__main__":
     database = 'chatbotDB'
     colletion = time.strftime('day_%Y%m%d',time.localtime(time.time())) 
     DB = motor.motor_tornado.MotorClient(server_site,server_port)[database]
-    CLTN = DB[colletion]
 
     #system arguments
     app = make_app(DB)
     app.listen(args.port)
     IOLoop.current().start()
-    
-
-
-
-
-    
-
