@@ -70,13 +70,13 @@ class MainHandler(tornado.web.RequestHandler):
     def retriveInput(self):
         reString = '{ "result": 0, "response": ":-)"}'
 
-        global BOT, DB, Cbots, swflag
+        global BOT, DB, Cbots, swflag, S2C
         try:
             inputKeys = self.get_argument('kw').strip()
             langKeys = self.get_argument('lang').strip()
             apiKeys = self.get_argument('apikey').strip()
             if apiKeys == "b1275afe-39f6-39c4-77b4-e5328dddba7" and inputKeys:
-                Cbot = Cbots[langKeys]
+                Cbot = Cbots[S2C[langKeys]] # 
                 response = swflag
                 if Cbot != None:
                     response = Cbot.get_response(inputKeys)
@@ -160,6 +160,9 @@ if __name__ == "__main__":
 
     #chatterbot
     swflag = '>_<'
+    langlist = ['bangla','chinese','custom','english','french','german','hebrew','hindi','indonesia','italian',
+            'marathi','portuguese','russian','spanish','swedish','tchinese','telugu','turkish']
+    S2C = {'en':'english','fr':'french','it':'italian','pt':'portuguese','ru':'russian','es':'spanish','sv':'swedish'}
     Cbots = cbots_init(swflag)
 
     # mongdb client
