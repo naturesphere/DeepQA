@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 from chatterbot import ChatBot
+import sys
+# import argparse
 
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--path', type=str, default='.', help='folder holds yml file')
+# args = parser.parse_args(sys.argv[1])
 
 # Uncomment the following lines to enable verbose logging
 # import logging
@@ -41,19 +46,23 @@ bot.train([
 ])
 '''
 
-bot.train(["D:/_Work/python/test/EN"])
-# bot.train(["\\192.168.1.250/corpus/LAN_DIC/EN"])
-bot.read_only=True
+# bot.train(["D:/_Work/python/test/EN"])
+try:
+    path = sys.argv[1]
+    bot.train([path])
 
-print("Type something to begin...")
+    print("check finish")
+except Exception as e:
+    print("Err: %s" % e)
+# print("Type something to begin...")
 
-# The following loop will execute each time the user enters input
-while True:
-    try:
-        # We pass None to this method because the parameter
-        # is not used by the TerminalAdapter
-        bot_input = bot.get_response(None)
+# # The following loop will execute each time the user enters input
+# while True:
+#     try:
+#         # We pass None to this method because the parameter
+#         # is not used by the TerminalAdapter
+#         bot_input = bot.get_response(None)
 
-    # Press ctrl-c or ctrl-d on the keyboard to exit
-    except (KeyboardInterrupt, EOFError, SystemExit):
-        break
+#     # Press ctrl-c or ctrl-d on the keyboard to exit
+#     except (KeyboardInterrupt, EOFError, SystemExit):
+#         break
