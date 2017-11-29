@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-# http://127.0.0.1:8000/CHATBOT?apikey=b1275afe-39f6-39c4-77b4-e5328dddba7&lang=english&kw=hi 
+# http://127.0.0.1:8000/CHATBOT?apikey=b1275afe-39f6-39c4-77b4-e5328dddba7&lang=en&kw=hi 
 
 
 
@@ -80,7 +80,7 @@ class MainHandler(tornado.web.RequestHandler):
                 response = swflag
                 if Cbot != None:
                     response = Cbot.get_response(inputKeys)
-                if response == swflag and langKeys=='english':
+                if response == swflag and langKeys=='en':
                     response = BOT.daemonPredict(inputKeys)
                 
                 # reString = '{ "result": 100, "response": \''+str(response)+'\'}'
@@ -113,7 +113,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 def cbots_init(swflag):
     langlist = ['bangla','chinese','custom','english','french','german','hebrew','hindi','indonesia','italian',
-                'marathi','portuguese','russian','spanish','swedish','tchinese','telugu','turkish']
+                'marathi','portuguese','russian','spanish','swedish','tchinese','telugu','turkish','testlang']
     # langlist = ['chinese','english']
     Cbots = dict().fromkeys(langlist)
     for lang in langlist:
@@ -160,9 +160,25 @@ if __name__ == "__main__":
 
     #chatterbot
     swflag = '>_<'
-    langlist = ['bangla','chinese','custom','english','french','german','hebrew','hindi','indonesia','italian',
-            'marathi','portuguese','russian','spanish','swedish','tchinese','telugu','turkish']
-    S2C = {'en':'english','fr':'french','it':'italian','pt':'portuguese','ru':'russian','es':'spanish','sv':'swedish'}
+    S2C = { 'bn':'bangla',    
+            'zh':'chinese',    
+            'custom':'custom',    
+            'en':'english',    
+            'fr':'french',
+            'de':'german',    
+            'he':'hebrew',     
+            'in':'hindi',         
+            'id':'indonesia',   
+            'it':'italian',
+            'mr':'marathi',            
+            'pt':'portuguese',
+            'ru':'russian',            
+            'es':'spanish',            
+            'sv':'swedish',            
+            'zh_TW':'tchinese',
+            'te':'telugu',           
+            'tr':'turkish'
+        }
     Cbots = cbots_init(swflag)
 
     # mongdb client

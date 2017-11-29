@@ -8,7 +8,7 @@ from chatterbot import ChatBot
 
 # Create a new instance of a ChatBot
 bot = ChatBot(
-    "Terminal",
+    "response database trainer",
     storage_adapter="chatterbot.storage.MongoDatabaseAdapter",
     logic_adapters=[
         "chatterbot.logic.MathematicalEvaluation",
@@ -16,15 +16,15 @@ bot = ChatBot(
         "chatterbot.logic.BestMatch",
         {
             'import_path':'chatterbot.logic.LowConfidenceAdapter',
-            'threshold':0.1,
+            'threshold':0.8,
             'default_response':'I am sorry, but I do not understand.'
         }
     ],
-    filters=['chatterbot.filters.RepetitiveResponseFilter'],
+    # filters=['chatterbot.filters.RepetitiveResponseFilter'],
     input_adapter="chatterbot.input.TerminalAdapter",
     output_adapter="chatterbot.output.TerminalAdapter",
-    trainer='chatterbot.trainers.ListTrainer',
-    database="chatterbot-database"
+    trainer='chatterbot.trainers.ChatterBotCorpusTrainer',
+    database="trained-database"
 )
 '''
 bot.train([
@@ -40,6 +40,9 @@ bot.train([
     "Ok, you are free to go!"
 ])
 '''
+
+bot.train(["D:/_Work/python/test/EN"])
+# bot.train(["\\192.168.1.250/corpus/LAN_DIC/EN"])
 bot.read_only=True
 
 print("Type something to begin...")

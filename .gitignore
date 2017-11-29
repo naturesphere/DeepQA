@@ -94,7 +94,6 @@ ENV/
 # nvidia-docker-compose
 nvidia-docker-compose.yml
 
-chatterbot/chatterbot_train2.py
 chatterbot/trained-database.db
 chatterbot/trained-database/statements.bson
 chatterbot/trained-database/statements.metadata.json
