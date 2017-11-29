@@ -96,7 +96,7 @@ class MainHandler(tornado.web.RequestHandler):
                                 'question':inputKeys,
                                 'answer':response
                             }
-                    colletion = time.strftime('%Y%m%d',time.localtime(time.time())) 
+                    colletion = time.strftime('day_%Y%m%d',time.localtime(time.time())) 
                     DB[colletion].insert_one(record)
                 except Exception as msg:
                     print(msg)
@@ -150,8 +150,8 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=8000, help='port')
     parser.add_argument('--modelTag', type=str, default='server', help='model suffix')
     args = parser.parse_args(sys.argv[1:])
-#    wsc = WSClient()
-#    websocket_connect('ws://192.168.1.109:1234/chat',ioloop,callback=wsc.on_connected,on_message_callback=wsc.on_message)
+    # wsc = WSClient()
+    # websocket_connect('ws://192.168.1.109:1234/chat',ioloop,callback=wsc.on_connected,on_message_callback=wsc.on_message)
     # chat bot
     BOT = chatbot.Chatbot()
     BOT.main(['--modelTag', args.modelTag, '--test', 'daemon', '--rootDir','.'])
@@ -185,7 +185,6 @@ if __name__ == "__main__":
     server_site = '127.0.0.1'
     server_port = 27017
     database = 'chatbotDB'
-    colletion = time.strftime('day_%Y%m%d',time.localtime(time.time())) 
     DB = motor.motor_tornado.MotorClient(server_site,server_port)[database]
 
     #system arguments
