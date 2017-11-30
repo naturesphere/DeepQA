@@ -123,7 +123,10 @@ def cbots_init(swflag):
         logic_adapters=[
             "chatterbot.logic.MathematicalEvaluation",
             # "chatterbot.logic.TimeLogicAdapter",
-            "chatterbot.logic.BestMatch",
+            {
+                "import_path":"chatterbot.logic.BestMatch",
+                "response_selection_method":"chatterbot.response_selection.get_random_response"
+            },
             {
                 'import_path':'chatterbot.logic.LowConfidenceAdapter',
                 'threshold':0.6,
